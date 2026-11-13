@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BENGAL STORM - Bangladesh Battle Royale</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b0f19;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hud-element {
+            position: absolute;
+            pointer-events: auto;
+        }
+        #top-bar {
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hud-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ffcc;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            text-shadow: 0 0 5px #00ffcc;
+        }
+        #joystick-container {
+            bottom: 30px;
+            left: 30px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: absolute;
+        }
+        #joystick-knob {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 255, 204, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 35px;
+            left: 35px;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+        #action-buttons {
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+        .game-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 68, 68, 0.8);
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            box-shadow: 0 0 10px #ff0000;
+            cursor: pointer;
+        }
+        .game-btn.fire {
+            width: 85px;
+            height: 85px;
+            background: rgba(255, 153, 0, 0.9);
+            border-color: #ff6600;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container"></div>
+
+    <div id="ui-overlay">
+        <div id="top-bar" class="hud-element">
+            <div class="hud-box">🗺️ BENGAL STORM: Bangladesh Map</div>
+            <div class="hud-box">❤️ HP: 100 | 🛡️ ALIVE: 48</div>
+        </div>
+
+        <div id="joystick-container" class="hud-element">
+            <div id="joystick-knob"></div>
+        </div>
+
+        <div id="action-buttons" class="hud-element">
+            <div class="game-btn" id="btn-jump">JUMP</div>
+            <div class="game-btn fire" id="btn-fire">FIRE 🔥</div>
+        </div>
+    </div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Bengal Storm Map Module -->
+    <script src="bengal-storm-map.js"></script>
+    
+    <script>
+        // Initialize Scene and Game Engine
+        const container = document.getElementById('game-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb); // Sky blue
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 50, 100);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(100, 200, 100);
+        scene.add(dirLight);
+
+        // Load Bengal Map if available
+        if (typeof initBengalMap === 'function') {
+            initBengalMap(scene);
+        } else {
+            // Fallback ground if map module loads later
+            const planeGeo = new THREE.PlaneGeometry(500, 500);
+            const planeMat = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
+            const ground = new THREE.Mesh(planeGeo, planeMat);
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground);
+        }
+
+        // Render Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
