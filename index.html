@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#102c2b">
+<title>BENGAL STORM — Haor Battle Prototype</title>
+<style>
+:root{--glass:rgba(7,24,25,.82);--line:rgba(214,245,224,.22);--gold:#ffd36a;--mint:#8ff0c4}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b2424;color:#fff;font-family:system-ui,"Noto Sans Bengali",sans-serif;touch-action:none}
+canvas{display:block;width:100vw;height:100dvh;background:#244e43}
+#hud{position:fixed;inset:0;pointer-events:none}
+.panel{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:9px 12px;backdrop-filter:blur(8px);box-shadow:0 6px 24px #0005}
+#top{position:absolute;left:10px;right:10px;top:env(safe-area-inset-top,8px);display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+#brand{font-weight:900;letter-spacing:1px;color:var(--gold);font-size:14px}#stats{font-size:12px;line-height:1.55;text-align:right}
+#healthWrap{width:125px;height:8px;border-radius:9px;background:#ffffff30;margin-top:5px;overflow:hidden}#health{height:100%;width:100%;background:#70e5a4}
+#bottomInfo{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translateX(-50%);font-size:11px;white-space:nowrap;color:#e8f4e9;text-shadow:0 2px 4px #000}
+#controls{position:fixed;inset:0;pointer-events:none}
+#stickArea{position:absolute;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:132px;height:132px;border-radius:50%;background:#071b1b66;border:2px solid #ffffff35;pointer-events:auto;touch-action:none}
+#stick{position:absolute;left:50%;top:50%;width:52px;height:52px;transform:translate(-50%,-50%);border-radius:50%;background:#b6f4d5aa;border:2px solid #e8fff1;box-shadow:0 2px 12px #0008}
+.action{position:absolute;pointer-events:auto;border:1px solid #ffffff70;color:white;background:#102b2bd9;border-radius:50%;font-weight:800;display:grid;place-items:center;touch-action:none;box-shadow:0 4px 16px #0008}
+#fire{right:22px;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);width:82px;height:82px;background:#a33a29e8;border:2px solid #ffd1b8;font-size:14px}
+#reload{right:112px;bottom:calc(env(safe-area-inset-bottom,0px) + 43px);width:54px;height:54px;font-size:11px}
+#swap{right:28px;bottom:calc(env(safe-area-inset-bottom,0px) + 126px);width:54px;height:54px;font-size:11px}
+#pause{position:absolute;right:10px;top:75px;width:42px;height:42px;border-radius:12px;pointer-events:auto;background:#102b2bd9;color:#fff;border:1px solid #ffffff55;font-size:18px}
+#toast{position:absolute;left:50%;top:22%;transform:translateX(-50%);font-weight:800;text-shadow:0 2px 8px #000;background:#071b1bc9;padding:8px 14px;border-radius:12px;opacity:0;transition:opacity .2s;white-space:nowrap}
+#screen{position:fixed;inset:0;background:linear-gradient(135deg,#081d1beF,#102d2beF);display:flex;align-items:center;justify-content:center;padding:22px;z-index:5}
+#card{width:min(440px,100%);border:1px solid #b9e8c444;background:#0b2222f2;border-radius:22px;padding:24px 20px;text-align:center;box-shadow:0 18px 60px #0009}
+h1{margin:0;color:var(--gold);font-size:clamp(26px,8vw,42px);letter-spacing:1px}#subtitle{color:#bde8d1;margin:5px 0 18px;font-size:13px}
+#card p{font-size:14px;line-height:1.6;color:#e3eee8}
+button{font:inherit;cursor:pointer}
+.mainBtn{border:0;border-radius:13px;padding:13px 22px;background:linear-gradient(135deg,#f6c85e,#e89a3b);color:#172321;font-weight:900;width:100%;margin-top:10px}
+.smallBtn{border:1px solid #8bbca3;background:#183c35;color:#eafff0;border-radius:10px;padding:9px 12px;margin:5px;font-size:12px}
+#help{font-size:11px;color:#b7d4c6;margin-top:14px;line-height:1.6}
+.hidden{display:none!important}
+@media(min-width:700px){#stickArea{width:150px;height:150px}#fire{width:90px;height:90px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+ <div id="top">
+  <div class="panel"><div id="brand">🇧🇩 BENGAL STORM</div><div style="font-size:10px;color:#c4dfd1">SUNAMGANJ HAOR • PROTOTYPE</div><div id="healthWrap"><div id="health"></div></div></div>
+  <div class="panel" id="stats">❤️ <span id="hpText">100</span> &nbsp; 🎯 <span id="score">0</span><br>🔫 <span id="ammo">24 / 120</span> &nbsp; Wave <span id="wave">1</span></div>
+ </div>
+ <div id="bottomInfo">বাম পাশে চলুন • FIRE চাপলে নিকটতম শত্রুকে লক্ষ্য করবে</div>
+ <div id="toast"></div>
+</div>
+<div id="controls" class="hidden">
+ <div id="stickArea"><div id="stick"></div></div>
+ <button class="action" id="fire">FIRE</button>
+ <button class="action" id="reload">RELOAD</button>
+ <button class="action" id="swap">WEAPON</button>
+ <button id="pause">Ⅱ</button>
+</div>
+<div id="screen">
+ <div id="card">
+  <h1>BENGAL STORM</h1><div id="subtitle">বাংলার ঝড় • SUNAMGANJ HAOR</div>
+  <p id="intro">হাওরের দ্বীপে টিকে থাকুন, শত্রুদের মোকাবিলা করুন এবং যত বেশি সম্ভব Wave পার করুন।</p>
+  <button class="mainBtn" id="start">গেম শুরু করুন</button>
+  <div><button class="smallBtn" id="soundToggle">🔊 Sound: ON</button><button class="smallBtn" id="howBtn">কন্ট্রোল</button></div>
+  <div id="help">এটি এক ফাইলের অফলাইন 2D playable prototype। মোবাইল ও কম্পিউটারে খেলা যাবে।</div>
+ </div>
+</div>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+let W=0,H=0,dpr=1, running=false,paused=false,gameOver=false,soundOn=true,audio=null,last=0,toastTimer=0;
+let player, enemies=[], bullets=[], particles=[], pickups=[], obstacles=[],score=0,wave=1,ammo=24,reserve=120,weapon=0,reloading=false,reloadAt=0,spawnLeft=0,spawnClock=0,fireHeld=false,fireClock=0;
+const world={w:2100,h:1500};
+const weapons=[{name:'RIFLE',mag:24,rate:.16,damage:26,speed:720},{name:'SMG',mag:36,rate:.085,damage:15,speed:780}];
+const keys={};
+const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',resize);resize();
+function audioCtx(){if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}
+function beep(freq=180,dur=.07,type='square',vol=.04){if(!soundOn)return;try{let a=audioCtx(),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+dur);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur)}catch(e){}}
+function say(t){$('toast').textContent=t;$('toast').style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.opacity=0,1400)}
+function reset(){player={x:world.w/2,y:world.h/2,r:17,hp:100,speed:235,angle:0,inv:0};enemies=[];bullets=[];particles=[];pickups=[];score=0;wave=1;ammo=weapons[weapon].mag;reserve=120;spawnLeft=7;spawnClock=0;gameOver=false;reloading=false;updateHud();makeObstacles()}
+function makeObstacles(){obstacles=[];for(let i=0;i<42;i++){let x=rand(100,world.w-100),y=rand(100,world.h-100);if(Math.hypot(x-player.x,y-player.y)>180)obstacles.push({x,y,r:rand(18,38),type:Math.random()<.6?'tree':'reed'})}}
+function updateHud(){$('hpText').textContent=Math.ceil(player?.hp??100);$('health').style.width=clamp(player?.hp??100,0,100)+'%';$('score').textContent=score;$('ammo').textContent=ammo+' / '+reserve;$('wave').textContent=wave}
+function start(){audioCtx();reset();running=true;paused=false;$('screen').classList.add('hidden');$('controls').classList.remove('hidden');last=performance.now();requestAnimationFrame(loop)}
+function end(){running=false;gameOver=true;$('controls').classList.add('hidden');$('screen').classList.remove('hidden');$('intro').textContent='গেম শেষ! আপনার স্কোর: '+score+'। আবার চেষ্টা করে আরও বেশি Wave পার করুন।';$('start').textContent='আবার খেলুন';$('help').textContent='টিপস: শত্রু কাছে আসার আগেই FIRE করুন, গুলি শেষ হলে RELOAD চাপুন।'}
+function togglePause(){if(!running)return;paused=!paused;$('pause').textContent=paused?'▶':'Ⅱ';say(paused?'গেম বিরতি':'আবার শুরু');if(!paused){last=performance.now();requestAnimationFrame(loop)}}
+function nearest(){let best=null,bd=Infinity;for(const e of enemies){let d=dist(player,e);if(d<bd){bd=d;best=e}}return best}
+function shoot(){if(!running||paused||gameOver||reloading)return;if(ammo<=0){say('গুলি শেষ — RELOAD চাপুন');beep(100,.08);return}let target=nearest();let ang=target?Math.atan2(target.y-player.y,target.x-player.x):player.angle;player.angle=ang;const w=weapons[weapon];ammo--;bullets.push({x:player.x+Math.cos(ang)*23,y:player.y+Math.sin(ang)*23,vx:Math.cos(ang)*w.speed,vy:Math.sin(ang)*w.speed,life:1.2,damage:w.damage,owner:'p'});for(let i=0;i<3;i++)particles.push({x:player.x+Math.cos(ang)*24,y:player.y+Math.sin(ang)*24,vx:rand(-55,55),vy:rand(-55,55),life:.12,color:'#ffd36a'});beep(weapon?240:130,.065,weapon?'sawtooth':'square',.035);updateHud()}
+function reload(){if(reloading||ammo===weapons[weapon].mag||reserve<=0)return;reloading=true;reloadAt=performance.now()+1250;say('রিলোড হচ্ছে…');beep(420,.06,'triangle')}
+function switchWeapon(){weapon=1-weapon;ammo=Math.min(ammo,weapons[weapon].mag);say(weapons[weapon].name+' নির্বাচিত');updateHud();beep(500,.05,'triangle')}
+function spawnEnemy(){let side=Math.floor(rand(0,4)),x=side===0?30:side===1?world.w-30:rand(30,world.w-30),y=side===2?30:side===3?world.h-30:rand(30,world.h-30);enemies.push({x,y,r:15,hp:wave>2?55:40,speed:rand(65,90)+wave*3,hit:0,attack:0})}
+function update(dt,now){
+ if(reloading&&now>=reloadAt){let need=weapons[weapon].mag-ammo,take=Math.min(need,reserve);ammo+=take;reserve-=take;reloading=false;beep(650,.08,'triangle');updateHud()}
+ let ix=0,iy=0;if(keys.ArrowLeft||keys.a)ix--;if(keys.ArrowRight||keys.d)ix++;if(keys.ArrowUp||keys.w)iy--;if(keys.ArrowDown||keys.s)iy++;
+ ix+=stick.x;iy+=stick.y;let mag=Math.hypot(ix,iy);if(mag>1){ix/=mag;iy/=mag}
+ if(mag>.05){player.x=clamp(player.x+ix*player.speed*dt,25,world.w-25);player.y=clamp(player.y+iy*player.speed*dt,25,world.h-25);if(!nearest())player.angle=Math.atan2(iy,ix)}
+ if(fireHeld){fireClock-=dt;if(fireClock<=0){shoot();fireClock=weapons[weapon].rate}}
+ if(spawnLeft>0){spawnClock-=dt;if(spawnClock<=0){spawnEnemy();spawnLeft--;spawnClock=.75}}
+ for(let i=enemies.length-1;i>=0;i--){let e=enemies[i],a=Math.atan2(player.y-e.y,player.x-e.x),d=dist(e,player);e.x+=Math.cos(a)*e.speed*dt;e.y+=Math.sin(a)*e.speed*dt;e.hit=Math.max(0,e.hit-dt);e.attack-=dt;if(d<31&&e.attack<=0){player.hp-=9;player.inv=.3;e.attack=.8;beep(85,.08,'sawtooth');updateHud();if(player.hp<=0){end();return}}}
+ for(let i=bullets.length-1;i>=0;i--){let b=bullets[i];b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;let hit=false;if(b.owner==='p'){for(let j=enemies.length-1;j>=0;j--){let e=enemies[j];if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+5){e.hp-=b.damage;e.hit=.1;hit=true;if(e.hp<=0){score+=10; if(Math.random()<.17)pickups.push({x:e.x,y:e.y,r:11});enemies.splice(j,1);beep(320,.05,'triangle');updateHud()}break}}}if(hit||b.life<=0||b.x<0||b.y<0||b.x>world.w||b.y>world.h)bullets.splice(i,1)}
+ for(let i=pickups.length-1;i>=0;i--){let p=pickups[i];if(dist(p,player)<28){player.hp=clamp(player.hp+20,0,100);pickups.splice(i,1);say('+20 HEALTH');beep(700,.12,'sine');updateHud()}}
+ for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
+ if(spawnLeft===0&&enemies.length===0){wave++;spawnLeft=6+wave*2;spawnClock=1;reserve+=weapons[weapon].mag; say('WAVE '+wave+' শুরু!');updateHud()}
+}
+function draw(){
+ let camX=clamp(player.x-W/2,0,world.w-W),camY=clamp(player.y-H/2,0,world.h-H);
+ ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(-camX,-camY);
+ ctx.fillStyle='#285e55';ctx.fillRect(0,0,world.w,world.h);
+ ctx.strokeStyle='#77b7a044';ctx.lineWidth=2;for(let y=35;y<world.h;y+=95){for(let x=25;x<world.w;x+=130){ctx.beginPath();ctx.ellipse(x+((y/95)%2)*30,y,randSafe(8,18),4,0,0,Math.PI*2);ctx.stroke()}}
+ ctx.fillStyle='#557c4d';ctx.beginPath();ctx.ellipse(world.w/2,world.h/2,620,440,-.08,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#668650';ctx.beginPath();ctx.ellipse(world.w/2,world.h/2,560,375,-.08,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#a5ad6a';ctx.lineWidth=34;ctx.beginPath();ctx.ellipse(world.w/2,world.h/2,470,300,-.08,0,Math.PI*2);ctx.stroke();
+ for(const o of obstacles){ctx.save();if(o.type==='tree'){ctx.fillStyle='#31583a';ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill();ctx.fillStyle='#6b8d4b';ctx.beginPath();ctx.arc(o.x-5,o.y-5,o.r*.66,0,7);ctx.fill();ctx.fillStyle='#4a3928';ctx.fillRect(o.x-4,o.y+o.r*.45,8,12)}else{ctx.strokeStyle='#a7b96a';ctx.lineWidth=3;for(let k=-2;k<=2;k++){ctx.beginPath();ctx.moveTo(o.x+k*5,o.y+10);ctx.lineTo(o.x+k*7-5,o.y-o.r);ctx.stroke()}}ctx.restore()}
+ for(const p of pickups){ctx.fillStyle='#8cf0b0';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();ctx.fillStyle='#17412d';ctx.fillRect(p.x-2,p.y-7,4,14);ctx.fillRect(p.x-7,p.y-2,14,4)}
+ for(const b of bullets){ctx.fillStyle='#ffe08a';ctx.beginPath();ctx.arc(b.x,b.y,4,0,7);ctx.fill()}
+ for(const e of enemies){ctx.save();ctx.translate(e.x,e.y);ctx.fillStyle=e.hit?'#fff':'#b64b3e';ctx.beginPath();ctx.arc(0,0,e.r,0,7);ctx.fill();ctx.fillStyle='#27352d';ctx.fillRect(-9,-4,18,8);ctx.fillStyle='#f5d2a3';ctx.beginPath();ctx.arc(0,-5,7,0,7);ctx.fill();ctx.fillStyle='#351f1c';ctx.fillRect(-15,-25,30,4);ctx.fillStyle='#f26b58';ctx.fillRect(-15,-25,30*clamp(e.hp/55,0,1),4);ctx.restore()}
+ ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.angle);ctx.fillStyle='#173f70';ctx.beginPath();ctx.arc(0,0,player.r,0,7);ctx.fill();ctx.fillStyle='#f0c69a';ctx.beginPath();ctx.arc(3,-5,9,0,7);ctx.fill();ctx.fillStyle='#2c3031';ctx.fillRect(8,-4,25,8);ctx.fillStyle='#d9e7dc';ctx.fillRect(4,-13,10,4);ctx.restore();
+ for(const p of particles){ctx.globalAlpha=clamp(p.life/.12,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill()}ctx.globalAlpha=1;
+ ctx.restore();
+ let mw=92,mh=66,mx=W-mw-12,my=H- mh-12;ctx.fillStyle='#071d1dcc';ctx.fillRect(mx,my,mw,mh);ctx.strokeStyle='#d5efcf88';ctx.strokeRect(mx,my,mw,mh);ctx.fillStyle='#78e8b0';ctx.fillRect(mx+player.x/world.w*mw-2,my+player.y/world.h*mh-2,5,5);ctx.fillStyle='#ed7561';for(const e of enemies)ctx.fillRect(mx+e.x/world.w*mw-1,my+e.y/world.h*mh-1,3,3);
+}
+function randSafe(a,b){return a+(b-a)*.5}
+function loop(now){if(!running||paused)return;let dt=Math.min((now-last)/1000,.035);last=now;update(dt,now);if(running){draw();requestAnimationFrame(loop)}}
+const stick={x:0,y:0};let stickPointer=null;
+const area=$('stickArea'),knob=$('stick');
+function setStick(e){let r=area.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,m=Math.hypot(dx,dy),max=42;if(m>max){dx=dx/m*max;dy=dy/m*max}stick.x=dx/max;stick.y=dy/max;knob.style.left=`calc(50% + ${dx}px)`;knob.style.top=`calc(50% + ${dy}px)`}
+area.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;area.setPointerCapture(e.pointerId);setStick(e)});
+area.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)setStick(e)});
+function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;stick.x=stick.y=0;knob.style.left='50%';knob.style.top='50%'}
+area.addEventListener('pointerup',releaseStick);area.addEventListener('pointercancel',releaseStick);
+$('fire').addEventListener('pointerdown',e=>{e.preventDefault();fireHeld=true;fireClock=0});['pointerup','pointercancel','pointerleave'].forEach(ev=>$('fire').addEventListener(ev,()=>fireHeld=false));
+$('reload').addEventListener('click',reload);$('swap').addEventListener('click',switchWeapon);$('pause').addEventListener('click',togglePause);
+$('start').addEventListener('click',start);
+$('soundToggle').addEventListener('click',()=>{soundOn=!soundOn;$('soundToggle').textContent='🔊 Sound: '+(soundOn?'ON':'OFF');if(soundOn)beep(520,.08)});
+$('howBtn').addEventListener('click',()=>{$('intro').textContent='বাম দিকের গোল জয়স্টিক দিয়ে চলুন। FIRE চাপলে কাছের শত্রুর দিকে গুলি যাবে। RELOAD দিয়ে গুলি ভরুন, WEAPON দিয়ে বন্দুক বদলান। Pause দিয়ে থামান।';$('help').textContent='কম্পিউটারে WASD/Arrow keys দিয়ে চলুন এবং Space দিয়ে গুলি করুন।'});
+addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' '){e.preventDefault();fireHeld=true}if(e.key==='r')reload();if(e.key==='q')switchWeapon();if(e.key==='Escape')togglePause()});
+addEventListener('keyup',e=>{keys[e.key]=false;if(e.key===' ')fireHeld=false});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+})();
+</script>
+</body>
+</html>
